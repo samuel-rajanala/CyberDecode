@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Encod3r — Encoding Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,400&family=DM+Sans:wght@300;400;500;600&family=Fraunces:opsz,wght@9..144,300;9..144,600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f3ef;--surface:#fff;--dark:#1a1d23;--dark2:#252830;--dark3:#2f333d;
+  --ink:#1a1d23;--ink2:#4a4e5a;--ink3:#8a8e99;--ink4:#c2c5cc;
+  --accent:#3d6bff;--accent-bg:#eef2ff;--accent2:#ff6b35;
+  --ok:#16a34a;--ok-bg:#f0fdf4;--err:#dc2626;--err-bg:#fef2f2;
+  --border:#e4e2de;--border2:#d0cdc8;
+  --r:10px;--r-lg:16px;
+  --sh:0 1px 3px rgba(0,0,0,.06),0 4px 12px rgba(0,0,0,.05);
+  --sh-lg:0 2px 8px rgba(0,0,0,.08),0 12px 32px rgba(0,0,0,.07);
+  --sans:'DM Sans',sans-serif;--mono:'DM Mono',monospace;--disp:'Fraunces',serif;
+}
+html{font-size:16px}
+body{font-family:var(--sans);background:var(--bg);color:var(--ink);min-height:100vh;line-height:1.6}
+.app{display:flex;flex-direction:column;min-height:100vh}
+
+/* HEADER */
+header{background:var(--dark);color:#fff;padding:0 2rem;display:flex;align-items:center;justify-content:space-between;height:64px;position:sticky;top:0;z-index:100;gap:1rem}
+.logo{display:flex;align-items:baseline;gap:10px}
+.logo-name{font-family:var(--disp);font-size:1.45rem;font-weight:600;color:#fff;letter-spacing:-.01em}
+.logo-tag{font-family:var(--mono);font-size:11px;color:rgba(255,255,255,.3);font-weight:300;letter-spacing:.07em}
+.header-nav{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.header-nav::-webkit-scrollbar{display:none}
+.nav-btn{background:transparent;border:none;color:rgba(255,255,255,.45);font-family:var(--sans);font-size:13px;font-weight:400;padding:6px 14px;border-radius:6px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.nav-btn:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.85)}
+.nav-btn.active{background:rgba(255,255,255,.13);color:#fff;font-weight:500}
+.hist-badge{background:var(--accent);color:#fff;font-size:10px;font-family:var(--mono);padding:2px 7px;border-radius:20px;display:none;margin-left:4px}
+
+/* MAIN */
+main{flex:1;max-width:1100px;width:100%;margin:0 auto;padding:2rem 1.5rem 4rem}
+.panel{display:none;animation:fadeUp .2s ease both}
+.panel.active{display:block}
+
+/* PAGE TITLE */
+.page-title{font-family:var(--disp);font-size:1.55rem;font-weight:300;color:var(--ink);margin-bottom:.25rem;letter-spacing:-.02em}
+.page-desc{font-size:13.5px;color:var(--ink3);margin-bottom:1.75rem}
+
+/* FORMAT PILLS */
+.fmt-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center}
+.fmt-label{font-size:11.5px;font-weight:500;color:var(--ink3);margin-right:4px;letter-spacing:.04em}
+.fmt-pill{padding:5px 14px;border-radius:20px;border:1.5px solid var(--border2);background:var(--surface);color:var(--ink2);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .15s}
+.fmt-pill:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.fmt-pill.active{border-color:var(--accent);background:var(--accent);color:#fff;font-weight:500}
+
+/* SUB OPTIONS */
+.sub-row{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1rem;align-items:center;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)}
+.sub-label{font-size:11px;color:var(--ink3);font-weight:500;letter-spacing:.04em;margin-right:4px}
+.sub-pill{padding:3px 10px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--ink2);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s}
+.sub-pill:hover{border-color:var(--ink2);color:var(--ink)}
+.sub-pill.active{border-color:var(--dark);background:var(--dark);color:#fff}
+
+/* SPLIT */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1rem}
+@media(max-width:680px){.split{grid-template-columns:1fr}}
+
+/* FIELD */
+.field{display:flex;flex-direction:column;gap:6px}
+.field-label{font-size:11.5px;font-weight:600;color:var(--ink2);letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.badge-live{font-size:9px;font-family:var(--mono);padding:2px 6px;background:var(--ok-bg);color:var(--ok);border-radius:20px;font-weight:400;letter-spacing:.06em}
+
+textarea{width:100%;height:160px;padding:14px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:13px;color:var(--ink);line-height:1.65;resize:vertical;outline:none;transition:border-color .15s,box-shadow .15s;box-shadow:var(--sh)}
+textarea::placeholder{color:var(--ink4)}
+textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(61,107,255,.1),var(--sh)}
+
+/* RESULT */
+.result-wrap{position:relative}
+.result-box{min-height:100px;padding:14px 16px;background:var(--dark2);color:rgba(255,255,255,.88);border-radius:var(--r);font-family:var(--mono);font-size:13px;line-height:1.65;word-break:break-all;white-space:pre-wrap;box-shadow:var(--sh)}
+.result-box.empty{color:rgba(255,255,255,.25)}
+.result-box.error{background:var(--err-bg);color:var(--err);border:1.5px solid #fca5a5}
+.result-box.success{animation:popIn .2s ease}
+.copy-btn{position:absolute;top:10px;right:10px;padding:4px 12px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.15);border-radius:6px;color:rgba(255,255,255,.6);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s}
+.copy-btn:hover{background:rgba(255,255,255,.18);color:#fff}
+.copy-btn.copied{background:rgba(22,163,74,.3);border-color:rgba(22,163,74,.5);color:#86efac}
+.result-box.error .copy-btn{background:rgba(220,38,38,.1);border-color:rgba(220,38,38,.2);color:var(--err)}
+
+/* STATS */
+.stats-strip{display:flex;gap:1px;background:var(--border);border-radius:var(--r);overflow:hidden;margin-top:12px}
+.stat{flex:1;background:var(--surface);padding:10px 16px;text-align:center}
+.stat-lbl{font-size:10px;font-weight:600;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:3px}
+.stat-val{font-family:var(--mono);font-size:17px;font-weight:500;color:var(--ink)}
+.stat-val.accent{color:var(--accent)}
+.stat-val.small{font-size:13px;letter-spacing:.05em}
+.char-count{font-size:11px;color:var(--ink4);font-family:var(--mono);text-align:right}
+
+/* DETECT */
+.detect-grid{display:flex;flex-direction:column;gap:8px;margin-top:1.5rem}
+.detect-row{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);transition:border-color .15s,box-shadow .15s}
+.detect-row.top{border-color:var(--accent);box-shadow:0 0 0 3px rgba(61,107,255,.07)}
+.detect-row:hover{box-shadow:var(--sh)}
+.det-name{min-width:96px;font-family:var(--mono);font-size:12.5px;font-weight:500;color:var(--ink)}
+.det-bar-bg{flex:1;height:5px;background:var(--bg);border-radius:3px;overflow:hidden}
+.det-bar{height:100%;border-radius:3px;transition:width .55s cubic-bezier(.4,0,.2,1)}
+.det-pct{font-family:var(--mono);font-size:13px;font-weight:500;min-width:36px;text-align:right;color:var(--ink2)}
+.det-btn{padding:5px 12px;border-radius:6px;border:1.5px solid var(--border2);background:transparent;color:var(--ink2);font-family:var(--sans);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.det-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-bg)}
+.detect-empty{padding:2.5rem 0;text-align:center;color:var(--ink3);font-size:14px}
+
+/* BATCH */
+.batch-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:680px){.batch-grid{grid-template-columns:1fr}}
+
+/* BUTTONS */
+.btn-row{display:flex;gap:8px;margin-bottom:1.25rem;flex-wrap:wrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:var(--r);border:1.5px solid transparent;font-family:var(--sans);font-size:13.5px;font-weight:500;cursor:pointer;transition:all .15s}
+.btn-primary{background:var(--dark);color:#fff;border-color:var(--dark)}
+.btn-primary:hover{background:var(--dark3);box-shadow:0 4px 12px rgba(0,0,0,.18)}
+.btn-ghost{background:var(--surface);color:var(--ink2);border-color:var(--border2)}
+.btn-ghost:hover{border-color:var(--ink3);color:var(--ink)}
+.btn-danger{background:var(--err-bg);color:var(--err);border-color:#fca5a5}
+.btn-danger:hover{background:#fee2e2}
+
+/* HISTORY TABLE */
+.hist-table{width:100%;border-collapse:separate;border-spacing:0 6px}
+.hist-table th{font-size:10.5px;font-weight:600;color:var(--ink3);letter-spacing:.08em;text-transform:uppercase;padding:0 14px 8px;text-align:left;border-bottom:1px solid var(--border)}
+.hist-row td{padding:10px 14px;background:var(--surface);font-size:13px;border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.hist-row td:first-child{border-left:1px solid var(--border);border-radius:var(--r) 0 0 var(--r)}
+.hist-row td:last-child{border-right:1px solid var(--border);border-radius:0 var(--r) var(--r) 0}
+.hist-fmt-tag{display:inline-block;padding:2px 8px;border-radius:4px;background:var(--accent-bg);color:var(--accent);font-family:var(--mono);font-size:11px;font-weight:500}
+.hist-op-tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;font-family:var(--mono)}
+.hist-op-tag.enc{background:#fff7ed;color:var(--accent2)}
+.hist-op-tag.dec{background:var(--ok-bg);color:var(--ok)}
+.hist-overflow{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px;font-family:var(--mono);font-size:12px;color:var(--ink2);display:block}
+.hist-restore-btn{padding:4px 10px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--ink3);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s}
+.hist-restore-btn:hover{border-color:var(--dark);color:var(--dark);background:var(--bg)}
+.hist-empty{text-align:center;padding:3rem 0;color:var(--ink3);font-size:14px}
+
+/* REFERENCE */
+.ref-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;margin-bottom:2rem}
+.ref-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r-lg);padding:18px;box-shadow:var(--sh);transition:box-shadow .15s,border-color .15s}
+.ref-card:hover{box-shadow:var(--sh-lg);border-color:var(--border2)}
+.ref-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.ref-icon{width:32px;height:32px;border-radius:8px;background:var(--dark);color:#fff;font-family:var(--mono);font-size:11px;font-weight:500;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ref-title{font-weight:600;font-size:14px;color:var(--ink)}
+.ref-body{font-size:13px;color:var(--ink2);line-height:1.75}
+.ref-body code{font-family:var(--mono);font-size:12px;background:var(--bg);padding:1px 5px;border-radius:4px;color:var(--accent)}
+.section-title{font-family:var(--disp);font-size:1.1rem;font-weight:300;color:var(--ink);margin:1.75rem 0 1rem;padding-bottom:8px;border-bottom:1px solid var(--border);letter-spacing:-.01em}
+.ex-card{background:var(--dark2);border-radius:var(--r);padding:16px 20px;color:rgba(255,255,255,.75);font-family:var(--mono);font-size:12.5px;line-height:1.75;word-break:break-all}
+.ex-lbl{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.12em;font-weight:500;text-transform:uppercase;margin-bottom:6px}
+.ex-val{color:rgba(255,255,255,.9)}
+.ex-note{margin-top:8px;color:rgba(255,255,255,.35);font-size:11px}
+.ex-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.hint-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.hint-card{background:var(--surface);border:1.5px solid var(--border);border-radius:var(--r);padding:14px;font-size:13px;color:var(--ink2);line-height:1.8}
+.hint-card strong{color:var(--ink);font-family:var(--mono);font-size:12px}
+
+/* FOOTER */
+footer{background:var(--dark);padding:1.25rem 2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+.footer-l{font-size:12px;color:rgba(255,255,255,.3);font-family:var(--mono)}
+.footer-r{display:flex;gap:6px}
+.footer-tag{font-family:var(--mono);font-size:10px;padding:3px 8px;border:1px solid rgba(255,255,255,.12);color:rgba(255,255,255,.3);border-radius:4px}
+
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes popIn{0%{transform:scale(.99)}60%{transform:scale(1.005)}100%{transform:scale(1)}}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--ink4);border-radius:4px}
+</style>
+</head>
+<body>
+<div class="app">
+
+<header>
+  <div class="logo">
+    <span class="logo-name">Encod3r</span>
+    <span class="logo-tag">encoding studio</span>
+  </div>
+  <nav class="header-nav">
+    <button class="nav-btn active" onclick="switchTab('encode',this)">Encode</button>
+    <button class="nav-btn" onclick="switchTab('decode',this)">Decode</button>
+    <button class="nav-btn" onclick="switchTab('detect',this)">Auto-detect</button>
+    <button class="nav-btn" onclick="switchTab('batch',this)">Batch</button>
+    <button class="nav-btn" onclick="switchTab('history',this)">History<span class="hist-badge" id="hist-badge">0</span></button>
+    <button class="nav-btn" onclick="switchTab('reference',this)">Reference</button>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ENCODE -->
+  <div class="panel active" id="panel-encode">
+    <p class="page-title">Encode</p>
+    <p class="page-desc">Transform plaintext into an encoded representation.</p>
+    <div class="fmt-row">
+      <span class="fmt-label">Format</span>
+      <button class="fmt-pill active" onclick="setEncFmt('b64',this)">Base64</button>
+      <button class="fmt-pill" onclick="setEncFmt('b64url',this)">Base64 URL</button>
+      <button class="fmt-pill" onclick="setEncFmt('b32',this)">Base32</button>
+      <button class="fmt-pill" onclick="setEncFmt('hex',this)">Hex</button>
+      <button class="fmt-pill" onclick="setEncFmt('url',this)">URL</button>
+      <button class="fmt-pill" onclick="setEncFmt('form',this)">Form</button>
+    </div>
+    <div id="hex-opts" style="display:none">
+      <div class="sub-row">
+        <span class="sub-label">Hex style</span>
+        <button class="sub-pill active" onclick="setHexStyle('plain',this)">plain</button>
+        <button class="sub-pill" onclick="setHexStyle('space',this)">space-sep</button>
+        <button class="sub-pill" onclick="setHexStyle('colon',this)">colon-sep</button>
+        <button class="sub-pill" onclick="setHexStyle('upper',this)">uppercase</button>
+      </div>
+    </div>
+    <div class="split">
+      <div class="field">
+        <div class="field-label">Input <span class="badge-live">live</span></div>
+        <textarea id="enc-input" placeholder="Type or paste text to encode…" oninput="encodeAuto();countChars(this,'enc-chars')"></textarea>
+        <div class="char-count" id="enc-chars">0 chars</div>
+      </div>
+      <div class="field">
+        <div class="field-label">Output</div>
+        <div class="result-wrap">
+          <div class="result-box empty" id="enc-result">// output appears here</div>
+          <button class="copy-btn" onclick="copyBox('enc-result',this)">Copy</button>
+        </div>
+        <div class="char-count" id="enc-out"></div>
+      </div>
+    </div>
+    <div class="stats-strip" id="enc-stats" style="display:none">
+      <div class="stat"><div class="stat-lbl">Input</div><div class="stat-val" id="s-in">—</div></div>
+      <div class="stat"><div class="stat-lbl">Output</div><div class="stat-val" id="s-out">—</div></div>
+      <div class="stat"><div class="stat-lbl">Overhead</div><div class="stat-val accent" id="s-ratio">—</div></div>
+      <div class="stat"><div class="stat-lbl">Format</div><div class="stat-val small" id="s-fmt">—</div></div>
+    </div>
+  </div>
+
+  <!-- DECODE -->
+  <div class="panel" id="panel-decode">
+    <p class="page-title">Decode</p>
+    <p class="page-desc">Reverse an encoded string back to plaintext.</p>
+    <div class="fmt-row">
+      <span class="fmt-label">Format</span>
+      <button class="fmt-pill active" onclick="setDecFmt('b64',this)">Base64</button>
+      <button class="fmt-pill" onclick="setDecFmt('b64url',this)">Base64 URL</button>
+      <button class="fmt-pill" onclick="setDecFmt('b32',this)">Base32</button>
+      <button class="fmt-pill" onclick="setDecFmt('hex',this)">Hex</button>
+      <button class="fmt-pill" onclick="setDecFmt('url',this)">URL</button>
+      <button class="fmt-pill" onclick="setDecFmt('form',this)">Form</button>
+    </div>
+    <div class="split">
+      <div class="field">
+        <div class="field-label">Encoded input <span class="badge-live">live</span></div>
+        <textarea id="dec-input" placeholder="Paste encoded string…" oninput="decodeAuto()"></textarea>
+      </div>
+      <div class="field">
+        <div class="field-label">Decoded output</div>
+        <div class="result-wrap">
+          <div class="result-box empty" id="dec-result">// decoded output appears here</div>
+          <button class="copy-btn" onclick="copyBox('dec-result',this)">Copy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETECT -->
+  <div class="panel" id="panel-detect">
+    <p class="page-title">Auto-detect</p>
+    <p class="page-desc">Paste any encoded string — heuristic analysis identifies the format.</p>
+    <div class="field" style="margin-bottom:0">
+      <div class="field-label">Unknown string</div>
+      <textarea id="det-input" placeholder="Paste any string here…" oninput="runDetect()" style="height:120px"></textarea>
+    </div>
+    <div id="det-body"><div class="detect-empty">Enter an encoded string above to begin analysis.</div></div>
+  </div>
+
+  <!-- BATCH -->
+  <div class="panel" id="panel-batch">
+    <p class="page-title">Batch process</p>
+    <p class="page-desc">Process multiple values at once — one per line.</p>
+    <div class="fmt-row">
+      <span class="fmt-label">Operation</span>
+      <button class="fmt-pill active" onclick="setBatOp('enc-b64',this)">Encode → B64</button>
+      <button class="fmt-pill" onclick="setBatOp('dec-b64',this)">Decode B64</button>
+      <button class="fmt-pill" onclick="setBatOp('enc-b32',this)">Encode → B32</button>
+      <button class="fmt-pill" onclick="setBatOp('dec-b32',this)">Decode B32</button>
+      <button class="fmt-pill" onclick="setBatOp('enc-hex',this)">Encode → Hex</button>
+      <button class="fmt-pill" onclick="setBatOp('dec-hex',this)">Decode Hex</button>
+      <button class="fmt-pill" onclick="setBatOp('enc-url',this)">URL Encode</button>
+      <button class="fmt-pill" onclick="setBatOp('dec-url',this)">URL Decode</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="runBatch()">&#9654; Process all</button>
+      <button class="btn btn-danger" onclick="clearBatch()">&#10005; Clear</button>
+    </div>
+    <div class="batch-grid">
+      <div class="field">
+        <div class="field-label">Input <span style="font-size:10px;font-weight:400;color:var(--ink4)">one per line</span></div>
+        <textarea id="bat-input" style="height:220px" placeholder="value1&#10;value2&#10;value3"></textarea>
+      </div>
+      <div class="field">
+        <div class="field-label">Results</div>
+        <div class="result-wrap">
+          <div class="result-box empty" id="bat-result" style="min-height:220px">// results appear here</div>
+          <button class="copy-btn" onclick="copyBox('bat-result',this)">Copy</button>
+        </div>
+      </div>
+    </div>
+    <div class="stats-strip" id="bat-stats" style="display:none">
+      <div class="stat"><div class="stat-lbl">Processed</div><div class="stat-val" id="bat-count">0</div></div>
+      <div class="stat"><div class="stat-lbl">Errors</div><div class="stat-val" style="color:var(--err)" id="bat-errors">0</div></div>
+    </div>
+  </div>
+
+  <!-- HISTORY -->
+  <div class="panel" id="panel-history">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px">
+      <div><p class="page-title">History</p><p class="page-desc" style="margin:0">Recent encode / decode operations.</p></div>
+      <button class="btn btn-danger" onclick="clearHistory()">&#10005; Clear history</button>
+    </div>
+    <div id="hist-body"><div class="hist-empty">No operations recorded yet.</div></div>
+  </div>
+
+  <!-- REFERENCE -->
+  <div class="panel" id="panel-reference">
+    <p class="page-title">Reference</p>
+    <p class="page-desc">Format specs, use cases, and real-world examples.</p>
+    <div class="ref-grid">
+      <div class="ref-card">
+        <div class="ref-card-hdr"><div class="ref-icon">B64</div><div class="ref-title">Base64</div></div>
+        <div class="ref-body">Alphabet: <code>A–Z a–z 0–9 + /</code><br>Padding: <code>=</code> to multiple of 4<br>Output: ~133% of input<br>Use: JWT tokens, data URIs, MIME</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-card-hdr"><div class="ref-icon" style="font-size:10px">B64U</div><div class="ref-title">Base64 URL</div></div>
+        <div class="ref-body">Replaces <code>+→-</code> and <code>/→_</code><br>No padding characters<br>Safe in URLs and filenames<br>Use: OAuth, API keys, cookies</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-card-hdr"><div class="ref-icon">B32</div><div class="ref-title">Base32</div></div>
+        <div class="ref-body">Alphabet: <code>A–Z 2–7</code><br>Case-insensitive, no ambiguous chars<br>Output: ~160% of input<br>Use: TOTP (2FA), DNS labels</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-card-hdr"><div class="ref-icon">HEX</div><div class="ref-title">Hexadecimal</div></div>
+        <div class="ref-body">Each byte → <code>2 hex digits</code> 00–FF<br>Upper or lowercase output<br>Output: 200% of input<br>Use: Binary dumps, hashes, MAC</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-card-hdr"><div class="ref-icon" style="font-size:10px">URL</div><div class="ref-title">URL Encoding</div></div>
+        <div class="ref-body">Unsafe chars → <code>%HH</code><br>Space → <code>%20</code> (RFC 3986)<br>Standard percent-encoding<br>Use: Query strings, path params</div>
+      </div>
+      <div class="ref-card">
+        <div class="ref-card-hdr"><div class="ref-icon" style="font-size:9px">FORM</div><div class="ref-title">Form Encoding</div></div>
+        <div class="ref-body">Space → <code>+</code> instead of %20<br>application/x-www-form-urlencoded<br>Used by HTML form POST<br>Use: Login payloads, forms</div>
+      </div>
+    </div>
+    <div class="section-title">Real-world examples</div>
+    <div class="ex-grid">
+      <div class="ex-card"><div class="ex-lbl">JWT header · Base64 URL</div><div class="ex-val">eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9</div><div class="ex-note">→ {"alg":"HS256","typ":"JWT"}</div></div>
+      <div class="ex-card"><div class="ex-lbl">TOTP secret · Base32</div><div class="ex-val">JBSWY3DPEHPK3PXP</div><div class="ex-note">Used by Google Authenticator / Authy</div></div>
+      <div class="ex-card"><div class="ex-lbl">URL query string · Form encoded</div><div class="ex-val">q=hello+world&lang=en%2FUS</div><div class="ex-note">→ q="hello world", lang="en/US"</div></div>
+      <div class="ex-card"><div class="ex-lbl">SHA-256 hash · Hex</div><div class="ex-val">2cf24dba5fb0a30e26e83b2ac5b9e29e1b161e5c</div><div class="ex-note">→ sha256("hello") (truncated)</div></div>
+    </div>
+    <div class="section-title">Detection heuristics</div>
+    <div class="hint-grid">
+      <div class="hint-card"><strong>Base64</strong><br>Chars [A-Za-z0-9+/=], length % 4 = 0, padding present</div>
+      <div class="hint-card"><strong>Base64 URL</strong><br>Chars [A-Za-z0-9-_], no + / = padding</div>
+      <div class="hint-card"><strong>Base32</strong><br>Chars [A-Z2-7=], length % 8 = 0</div>
+      <div class="hint-card"><strong>Hex</strong><br>Chars [0-9A-Fa-f: ], even length</div>
+      <div class="hint-card"><strong>URL / Form</strong><br>Presence of %XX sequences; + for spaces in form</div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <div class="footer-l">Encod3r — encoding is not encryption — no security is provided</div>
+  <div class="footer-r">
+    <span class="footer-tag">RFC 4648</span>
+    <span class="footer-tag">RFC 3986</span>
+    <span class="footer-tag">RFC 2396</span>
+  </div>
+</footer>
+</div>
+
+<script>
+let encFmt='b64',decFmt='b64',batOp='enc-b64',hexStyle='plain';
+let history=[];
+
+function switchTab(name,btn){
+  document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if(btn)btn.classList.add('active');
+  if(name==='history')renderHistory();
+}
+function setEncFmt(f,btn){
+  encFmt=f;
+  document.querySelectorAll('#panel-encode .fmt-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('hex-opts').style.display=f==='hex'?'block':'none';
+  encodeAuto();
+}
+function setDecFmt(f,btn){
+  decFmt=f;
+  document.querySelectorAll('#panel-decode .fmt-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  decodeAuto();
+}
+function setBatOp(op,btn){
+  batOp=op;
+  document.querySelectorAll('#panel-batch .fmt-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+function setHexStyle(s,btn){
+  hexStyle=s;
+  document.querySelectorAll('.sub-pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  encodeAuto();
+}
+
+const B32='ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+function toB64(s){try{return btoa(unescape(encodeURIComponent(s)))}catch(e){throw new Error('Encode failed')}}
+function fromB64(s){try{return decodeURIComponent(escape(atob(s.trim())))}catch(e){throw new Error('Invalid Base64')}}
+function toB64url(s){return toB64(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')}
+function fromB64url(s){let p=s.trim().replace(/-/g,'+').replace(/_/g,'/');while(p.length%4)p+='=';return fromB64(p)}
+function toB32(s){const b=new TextEncoder().encode(s);let bits='';for(const x of b)bits+=x.toString(2).padStart(8,'0');while(bits.length%5)bits+='0';let out='';for(let i=0;i<bits.length;i+=5)out+=B32[parseInt(bits.slice(i,i+5),2)];while(out.length%8)out+='=';return out}
+function fromB32(s){s=s.toUpperCase().replace(/=/g,'');let bits='';for(const c of s){const i=B32.indexOf(c);if(i<0)throw new Error('Invalid Base32 char: '+c);bits+=i.toString(2).padStart(5,'0')}const b=[];for(let i=0;i+8<=bits.length;i+=8)b.push(parseInt(bits.slice(i,i+8),2));return new TextDecoder().decode(new Uint8Array(b))}
+function toHex(s){const b=new TextEncoder().encode(s);let h=Array.from(b).map(x=>x.toString(16).padStart(2,'0'));if(hexStyle==='upper')h=h.map(x=>x.toUpperCase());if(hexStyle==='space')return h.join(' ');if(hexStyle==='colon')return h.join(':');return h.join('')}
+function fromHex(s){s=s.replace(/[\s:]/g,'').trim();if(s.length%2)throw new Error('Odd-length hex string');const b=[];for(let i=0;i<s.length;i+=2){const x=parseInt(s.slice(i,i+2),16);if(isNaN(x))throw new Error('Invalid hex at position '+i);b.push(x)}return new TextDecoder().decode(new Uint8Array(b))}
+function toURL(s){return encodeURIComponent(s)}
+function fromURL(s){return decodeURIComponent(s.trim())}
+function toForm(s){return encodeURIComponent(s).replace(/%20/g,'+')}
+function fromForm(s){return decodeURIComponent(s.trim().replace(/\+/g,'%20'))}
+
+const ENC={b64:toB64,b64url:toB64url,b32:toB32,hex:toHex,url:toURL,form:toForm};
+const DEC={b64:fromB64,b64url:fromB64url,b32:fromB32,hex:fromHex,url:fromURL,form:fromForm};
+const FMT_NAMES={b64:'Base64',b64url:'Base64 URL',b32:'Base32',hex:'Hex',url:'URL',form:'Form'};
+function tryFn(fn,val){try{return{ok:true,val:fn(val)}}catch(e){return{ok:false,val:'Error: '+e.message}}}
+
+let histTimer;
+function encodeAuto(){
+  const input=document.getElementById('enc-input').value;
+  const box=document.getElementById('enc-result');
+  const stats=document.getElementById('enc-stats');
+  if(!input){setBox(box,'// output appears here','empty');stats.style.display='none';document.getElementById('enc-out').textContent='';return}
+  const{ok,val}=tryFn(ENC[encFmt],input);
+  setBox(box,val,ok?'success':'error');
+  if(ok){
+    const inB=new TextEncoder().encode(input).length;
+    const outB=new TextEncoder().encode(val).length;
+    document.getElementById('s-in').textContent=inB+' B';
+    document.getElementById('s-out').textContent=outB+' B';
+    document.getElementById('s-ratio').textContent='+'+Math.round((outB/inB-1)*100)+'%';
+    document.getElementById('s-fmt').textContent=FMT_NAMES[encFmt];
+    document.getElementById('enc-out').textContent=val.length+' chars';
+    stats.style.display='flex';
+    schedHistory(input,val,FMT_NAMES[encFmt],'ENCODE');
+  }else{stats.style.display='none';document.getElementById('enc-out').textContent=''}
+}
+function decodeAuto(){
+  const input=document.getElementById('dec-input').value;
+  const box=document.getElementById('dec-result');
+  if(!input.trim()){setBox(box,'// decoded output appears here','empty');return}
+  const{ok,val}=tryFn(DEC[decFmt],input);
+  setBox(box,val,ok?'':'error');
+  if(ok)schedHistory(input,val,FMT_NAMES[decFmt],'DECODE');
+}
+
+function detectScores(s){
+  const c=s.trim(),sc={};
+  const b64c=c.replace(/\s/g,'');
+  const isB64=/^[A-Za-z0-9+/]+=*$/.test(b64c);
+  sc['Base64']=Math.min((isB64?50:0)+(b64c.length%4===0?30:0)+(b64c.includes('=')&&isB64?20:0),99);
+  const isB64U=/^[A-Za-z0-9\-_]+$/.test(b64c);
+  sc['Base64 URL']=Math.min((isB64U&&!s.includes('+')&&!s.includes('/')&&!s.includes('=')?70:0)+(b64c.length%4<=2?20:0),99);
+  const b32c=c.replace(/\s/g,'').toUpperCase();
+  const isB32=/^[A-Z2-7]+=*$/.test(b32c);
+  sc['Base32']=Math.min((isB32?55:0)+(b32c.length%8===0?25:0)+(isB32?10:0),99);
+  const hc=c.replace(/[\s:]/g,'');
+  const isHex=/^[0-9A-Fa-f]+$/.test(hc);
+  sc['Hex']=Math.min((isHex?50:0)+(hc.length%2===0?30:0)+(s.includes(':')?15:0),99);
+  const pct=(c.match(/%[0-9A-Fa-f]{2}/g)||[]).length;
+  sc['URL encoded']=Math.min(pct*28+(s.includes('%20')?15:0),99);
+  sc['Form encoded']=Math.min((s.includes('+')&&!s.includes(' ')?40:0)+pct*20,99);
+  return sc;
+}
+const DET_MAP={'Base64':'b64','Base64 URL':'b64url','Base32':'b32','Hex':'hex','URL encoded':'url','Form encoded':'form'};
+const BAR_CLRS=['#3d6bff','#0ea5e9','#10b981','#f59e0b','#ef4444','#8b5cf6'];
+
+function runDetect(){
+  const input=document.getElementById('det-input').value;
+  const body=document.getElementById('det-body');
+  if(!input.trim()){body.innerHTML='<div class="detect-empty">Enter an encoded string above to begin analysis.</div>';return}
+  const scores=Object.entries(detectScores(input)).sort((a,b)=>b[1]-a[1]);
+  const top=scores[0][1];
+  body.innerHTML='<div class="detect-grid">'+scores.map(([name,pct],i)=>{
+    const fmt=DET_MAP[name];let decoded='';
+    try{decoded=DEC[fmt](input.trim())}catch(e){}
+    const canDec=decoded&&!decoded.startsWith('Error:')&&decoded!==input.trim();
+    const isTop=pct===top&&pct>20;
+    return`<div class="detect-row${isTop?' top':''}">
+      <span class="det-name">${name}</span>
+      <div class="det-bar-bg"><div class="det-bar" style="width:${pct}%;background:${BAR_CLRS[i]}"></div></div>
+      <span class="det-pct" style="color:${BAR_CLRS[i]}">${pct}%</span>
+      ${pct>25&&canDec?`<button class="det-btn" onclick="jumpDecode('${fmt}','${escJs(input.trim())}')">Decode ↗</button>`:'<span style="min-width:72px"></span>'}
+    </div>`;
+  }).join('')+'</div>';
+}
+function jumpDecode(fmt,input){
+  document.getElementById('dec-input').value=input;
+  const fmts=['b64','b64url','b32','hex','url','form'];
+  document.querySelectorAll('#panel-decode .fmt-pill').forEach((b,i)=>b.classList.toggle('active',fmts[i]===fmt));
+  decFmt=fmt;
+  document.querySelectorAll('.nav-btn')[1].click();
+  decodeAuto();
+}
+
+function runBatch(){
+  const lines=document.getElementById('bat-input').value.split('\n').filter(l=>l.trim());
+  if(!lines.length)return;
+  let errors=0;
+  const[op,fmt]=batOp.split('-');
+  const fn=op==='enc'?ENC[fmt]:DEC[fmt];
+  const results=lines.map(line=>{try{return fn?fn(line.trim()):'Unknown format'}catch(e){errors++;return'// Error: '+e.message}});
+  setBox(document.getElementById('bat-result'),results.join('\n'),'');
+  document.getElementById('bat-count').textContent=lines.length;
+  document.getElementById('bat-errors').textContent=errors;
+  document.getElementById('bat-stats').style.display='flex';
+}
+function clearBatch(){
+  document.getElementById('bat-input').value='';
+  setBox(document.getElementById('bat-result'),'// results appear here','empty');
+  document.getElementById('bat-stats').style.display='none';
+}
+
+function schedHistory(input,output,fmt,op){
+  clearTimeout(histTimer);
+  histTimer=setTimeout(()=>{
+    history.unshift({input,output,fmt,op});
+    if(history.length>60)history=history.slice(0,60);
+    const badge=document.getElementById('hist-badge');
+    badge.textContent=history.length;badge.style.display=history.length?'inline':'none';
+  },700);
+}
+function renderHistory(){
+  const body=document.getElementById('hist-body');
+  if(!history.length){body.innerHTML='<div class="hist-empty">No operations recorded yet.</div>';return}
+  body.innerHTML=`<table class="hist-table"><thead><tr><th>Format</th><th>Input</th><th>Output</th><th>Op</th><th></th></tr></thead><tbody>
+  ${history.map((h,i)=>`<tr class="hist-row">
+    <td><span class="hist-fmt-tag">${h.fmt}</span></td>
+    <td><span class="hist-overflow">${escHtml(h.input)}</span></td>
+    <td><span class="hist-overflow">${escHtml(h.output)}</span></td>
+    <td><span class="hist-op-tag ${h.op==='ENCODE'?'enc':'dec'}">${h.op}</span></td>
+    <td><button class="hist-restore-btn" onclick="restoreHistory(${i})">Restore</button></td>
+  </tr>`).join('')}</tbody></table>`;
+}
+function restoreHistory(i){
+  const h=history[i];
+  const fmts=['b64','b64url','b32','hex','url','form'];
+  const names=['Base64','Base64 URL','Base32','Hex','URL','Form'];
+  const idx=names.indexOf(h.fmt);
+  if(h.op==='ENCODE'){
+    document.getElementById('enc-input').value=h.input;
+    if(idx>=0){encFmt=fmts[idx];document.querySelectorAll('#panel-encode .fmt-pill').forEach((b,j)=>b.classList.toggle('active',j===idx))}
+    document.querySelectorAll('.nav-btn')[0].click();encodeAuto();
+  }else{
+    document.getElementById('dec-input').value=h.input;
+    if(idx>=0){decFmt=fmts[idx];document.querySelectorAll('#panel-decode .fmt-pill').forEach((b,j)=>b.classList.toggle('active',j===idx))}
+    document.querySelectorAll('.nav-btn')[1].click();decodeAuto();
+  }
+}
+function clearHistory(){history=[];document.getElementById('hist-badge').style.display='none';renderHistory()}
+
+function setBox(el,text,cls){el.textContent=text;el.className='result-box'+(cls?' '+cls:'')}
+function copyBox(id,btn){
+  const el=document.getElementById(id);const t=el.textContent.trim();
+  if(!t||t.startsWith('//'))return;
+  navigator.clipboard.writeText(t).catch(()=>{});
+  btn.textContent='Copied!';btn.classList.add('copied');
+  setTimeout(()=>{btn.textContent='Copy';btn.classList.remove('copied')},1600);
+}
+function countChars(el,targetId){
+  const b=new TextEncoder().encode(el.value).length;
+  document.getElementById(targetId).textContent=el.value.length+' chars / '+b+' bytes';
+}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+function escJs(s){return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,'\\n')}
+</script>
+</body>
+</html>
