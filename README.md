@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:141E30,100:243B55&height=200&section=header&text=DexDecode&fontSize=40&fontColor=ffffff&animation=fadeIn" />
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=0:141E30,100:243B55&height=200&section=header&text=CyberDecode&fontSize=40&fontColor=ffffff&animation=fadeIn" />
 </p>
 
 <h1 align="center">🧠 CyberDecode – Multi-Format Encoder/Decoder with Auto Detection</h1>
