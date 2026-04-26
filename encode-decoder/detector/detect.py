@@ -1,6 +1,9 @@
 import re
 
 def detect_format(data: str):
+    if not data:
+        return ["Unknown"]
+
     results = []
 
     if re.fullmatch(r'[A-Za-z0-9+/=]+', data) and len(data) % 4 == 0:
