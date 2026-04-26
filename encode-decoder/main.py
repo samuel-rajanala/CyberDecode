@@ -12,6 +12,7 @@ def main():
 
     args = parser.parse_args()
 
+    # ------------------ INTERACTIVE ------------------
     if args.action == "interactive":
         while True:
             data = input("Enter text (or 'exit'): ")
@@ -20,17 +21,29 @@ def main():
             print("Detected:", detect_format(data))
         return
 
+    # ------------------ DETECT (FIXED) ------------------
     if args.action == "detect":
-        print("Detected:", detect_format(args.input))
+        # handle both cases:
+        # python main.py detect data
+        # python main.py detect format data
+        data = args.input if args.input else args.format
+
+        if not data:
+            print("❌ Please provide input to detect")
+            return
+
+        print("Detected:", detect_format(data))
         return
 
+    # ------------------ VALIDATION ------------------
     if not args.format or not args.input:
-        print("Format and input required")
+        print("❌ Format and input required")
         return
 
     fmt = args.format.lower()
     data = args.input
 
+    # ------------------ ENCODE ------------------
     if args.action == "encode":
         if fmt == "base64":
             print(base64_enc.encode(data))
@@ -40,7 +53,10 @@ def main():
             print(hex_enc.encode(data))
         elif fmt == "url":
             print(url_enc.encode(data))
+        else:
+            print("❌ Unsupported format")
 
+    # ------------------ DECODE ------------------
     elif args.action == "decode":
         if fmt == "base64":
             print(base64_enc.decode(data))
@@ -50,6 +66,8 @@ def main():
             print(hex_enc.decode(data))
         elif fmt == "url":
             print(url_enc.decode(data))
+        else:
+            print("❌ Unsupported format")
 
 
 if __name__ == "__main__":
