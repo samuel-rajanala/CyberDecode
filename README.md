@@ -2,7 +2,7 @@
   <img src="https://capsule-render.vercel.app/api?type=waving&color=0:141E30,100:243B55&height=200&section=header&text=DexDecode&fontSize=40&fontColor=ffffff&animation=fadeIn" />
 </p>
 
-<h1 align="center">🧠 DexDecode – Multi-Format Encoder/Decoder with Auto Detection</h1>
+<h1 align="center">🧠 CyberDecode – Multi-Format Encoder/Decoder with Auto Detection</h1>
 
 <p align="center">
 <img src="https://img.shields.io/badge/Python-3.x-blue?style=for-the-badge&logo=python">
